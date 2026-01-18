@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
 import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.IBinder;
@@ -19,6 +20,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
 
 public class FloatingWindowService extends Service {
     private static final String TAG = "FloatingWindowService";
@@ -52,7 +54,13 @@ public class FloatingWindowService extends Service {
         if (intent != null) {
             String action = intent.getAction();
             if (ACTION_SHOW.equals(action)) {
-                startForeground(NOTIFICATION_ID, createNotification());
+                // Start foreground with proper type for Android 14+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    startForeground(NOTIFICATION_ID, createNotification(),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+                } else {
+                    startForeground(NOTIFICATION_ID, createNotification());
+                }
                 showFloatingWindow();
             } else if (ACTION_HIDE.equals(action)) {
                 hideFloatingWindow();
