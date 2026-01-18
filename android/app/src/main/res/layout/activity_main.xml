@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5">
+    android:background="@color/background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,7 +18,7 @@
             android:text="AI 搜题助手"
             android:textSize="28sp"
             android:textStyle="bold"
-            android:textColor="#333333"
+            android:textColor="@color/text_primary"
             android:layout_marginBottom="8dp" />
 
         <TextView
@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:text="悬浮窗截图搜题，AI 智能解答"
             android:textSize="14sp"
-            android:textColor="#666666"
+            android:textColor="@color/text_secondary"
             android:layout_marginBottom="24dp" />
 
         <!-- Floating Window Switch Card -->
@@ -35,7 +35,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/card_background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -56,7 +57,7 @@
                         android:text="悬浮窗"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="#333333" />
+                        android:textColor="@color/text_primary" />
 
                     <TextView
                         android:id="@+id/status_text"
@@ -64,7 +65,7 @@
                         android:layout_height="wrap_content"
                         android:text="悬浮窗已关闭"
                         android:textSize="14sp"
-                        android:textColor="#666666"
+                        android:textColor="@color/text_secondary"
                         android:layout_marginTop="4dp" />
 
                 </LinearLayout>
@@ -84,7 +85,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/card_background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -98,7 +100,7 @@
                     android:text="API 设置"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#333333"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="16dp" />
 
                 <!-- API Key -->
@@ -107,7 +109,7 @@
                     android:layout_height="wrap_content"
                     android:text="API Key"
                     android:textSize="14sp"
-                    android:textColor="#666666"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginBottom="4dp" />
 
                 <EditText
@@ -115,6 +117,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="sk-..."
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
                     android:inputType="textPassword"
                     android:padding="12dp"
                     android:background="@drawable/edit_text_bg"
@@ -126,7 +130,7 @@
                     android:layout_height="wrap_content"
                     android:text="Base URL"
                     android:textSize="14sp"
-                    android:textColor="#666666"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginBottom="4dp" />
 
                 <EditText
@@ -134,6 +138,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="https://api.openai.com/v1"
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
                     android:inputType="textUri"
                     android:padding="12dp"
                     android:background="@drawable/edit_text_bg"
@@ -145,7 +151,7 @@
                     android:layout_height="wrap_content"
                     android:text="模型 ID"
                     android:textSize="14sp"
-                    android:textColor="#666666"
+                    android:textColor="@color/text_secondary"
                     android:layout_marginBottom="4dp" />
 
                 <EditText
@@ -153,6 +159,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="gpt-4o"
+                    android:textColorHint="@color/text_hint"
+                    android:textColor="@color/text_primary"
                     android:inputType="text"
                     android:padding="12dp"
                     android:background="@drawable/edit_text_bg"
@@ -163,7 +171,7 @@
                     android:layout_height="wrap_content"
                     android:text="支持: gpt-4o, gpt-4-turbo, o1, o1-mini, o3-mini 等"
                     android:textSize="12sp"
-                    android:textColor="#999999"
+                    android:textColor="@color/text_hint"
                     android:layout_marginBottom="16dp" />
 
                 <!-- Save Button -->
@@ -185,7 +193,8 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="4dp">
+            app:cardElevation="4dp"
+            app:cardBackgroundColor="@color/card_background">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -199,7 +208,7 @@
                     android:text="使用说明"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#333333"
+                    android:textColor="@color/text_primary"
                     android:layout_marginBottom="12dp" />
 
                 <TextView
@@ -207,7 +216,7 @@
                     android:layout_height="wrap_content"
                     android:text="1. 配置 API Key 并保存\n2. 开启悬浮窗\n3. 切换到题目所在的应用\n4. 点击悬浮窗按钮截图\n5. 等待 AI 解答"
                     android:textSize="14sp"
-                    android:textColor="#666666"
+                    android:textColor="@color/text_secondary"
                     android:lineSpacingExtra="4dp" />
 
             </LinearLayout>
