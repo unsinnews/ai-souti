@@ -88,7 +88,7 @@ public class FloatingWindowService extends Service {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("AI搜题助手")
             .setContentText("悬浮窗已开启，点击截图搜题")
-            .setSmallIcon(android.R.drawable.ic_menu_camera)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build();

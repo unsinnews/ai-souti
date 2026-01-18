@@ -1,10 +1,13 @@
 package com.aisouti;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -12,9 +15,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     private static final int OVERLAY_PERMISSION_REQUEST = 1001;
+    private static final int NOTIFICATION_PERMISSION_REQUEST = 1002;
 
     private Switch floatingSwitch;
     private EditText apiKeyInput;
@@ -89,8 +96,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void enableFloatingWindow() {
+        Log.d(TAG, "enableFloatingWindow called");
+
+        // Check notification permission for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Requesting notification permission");
+                ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    NOTIFICATION_PERMISSION_REQUEST);
+                floatingSwitch.setChecked(false);
+                return;
+            }
+        }
+
         // Check overlay permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            Log.d(TAG, "Requesting overlay permission");
             Toast.makeText(this, "请授予悬浮窗权限", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     Uri.parse("package:" + getPackageName()));
@@ -112,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Start floating window service
         try {
+            Log.d(TAG, "Starting FloatingWindowService");
             Intent intent = new Intent(this, FloatingWindowService.class);
             intent.setAction(FloatingWindowService.ACTION_SHOW);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -123,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
             statusText.setText("悬浮窗已开启");
             Toast.makeText(this, "悬浮窗已开启，可以切换到其他应用截图搜题", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
+            Log.e(TAG, "Error starting service", e);
             Toast.makeText(this, "启动悬浮窗失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             floatingSwitch.setChecked(false);
         }
@@ -149,6 +174,18 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "需要悬浮窗权限才能使用", Toast.LENGTH_SHORT).show();
                 }
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "通知权限已授予，请重新开启悬浮窗", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "需要通知权限才能使用悬浮窗", Toast.LENGTH_SHORT).show();
             }
         }
     }
