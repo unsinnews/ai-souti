@@ -62,36 +62,57 @@ public class ScreenCaptureService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "onStartCommand called");
+
         if (intent == null) {
+            Log.e(TAG, "Intent is null");
             stopSelf();
             return START_NOT_STICKY;
         }
 
         String action = intent.getAction();
+        Log.d(TAG, "Action: " + action);
+
         if (ACTION_START.equals(action)) {
             int resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, 0);
             Intent data = intent.getParcelableExtra(EXTRA_DATA);
 
-            // Start foreground with media projection type
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                startForeground(NOTIFICATION_ID, createNotification(),
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(NOTIFICATION_ID, createNotification(),
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
-            } else {
-                startForeground(NOTIFICATION_ID, createNotification());
+            Log.d(TAG, "resultCode: " + resultCode + ", data: " + (data != null));
+
+            if (data == null) {
+                Log.e(TAG, "Data intent is null");
+                stopSelf();
+                return START_NOT_STICKY;
             }
 
-            // Get MediaProjection
-            MediaProjectionManager projectionManager =
-                (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
-            mediaProjection = projectionManager.getMediaProjection(resultCode, data);
+            try {
+                // Start foreground with media projection type
+                Log.d(TAG, "Starting foreground service");
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    startForeground(NOTIFICATION_ID, createNotification(),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    startForeground(NOTIFICATION_ID, createNotification(),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
+                } else {
+                    startForeground(NOTIFICATION_ID, createNotification());
+                }
+                Log.d(TAG, "Foreground service started");
 
-            if (mediaProjection != null) {
-                captureScreen();
-            } else {
-                Log.e(TAG, "Failed to get MediaProjection");
+                // Get MediaProjection
+                MediaProjectionManager projectionManager =
+                    (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+                mediaProjection = projectionManager.getMediaProjection(resultCode, data);
+
+                if (mediaProjection != null) {
+                    Log.d(TAG, "MediaProjection obtained, starting capture");
+                    captureScreen();
+                } else {
+                    Log.e(TAG, "Failed to get MediaProjection");
+                    stopSelf();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error in onStartCommand", e);
                 stopSelf();
             }
         }
