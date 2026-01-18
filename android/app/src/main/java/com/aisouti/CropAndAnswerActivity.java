@@ -40,6 +40,11 @@ public class CropAndAnswerActivity extends AppCompatActivity {
     private ExecutorService executor;
     private Handler mainHandler;
 
+    // API settings
+    private String apiKey;
+    private String baseUrl;
+    private String model;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,11 +53,24 @@ public class CropAndAnswerActivity extends AppCompatActivity {
         executor = Executors.newSingleThreadExecutor();
         mainHandler = new Handler(Looper.getMainLooper());
 
+        loadSettings();
         initViews();
 
         imageBase64 = getIntent().getStringExtra("image_base64");
         if (imageBase64 != null) {
             displayImage();
+        }
+    }
+
+    private void loadSettings() {
+        android.content.SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+        apiKey = prefs.getString("api_key", "");
+        baseUrl = prefs.getString("base_url", "https://api.openai.com/v1");
+        model = prefs.getString("model", "gpt-4o");
+
+        // Ensure base URL doesn't end with /
+        if (baseUrl.endsWith("/")) {
+            baseUrl = baseUrl.substring(0, baseUrl.length() - 1);
         }
     }
 
@@ -79,26 +97,25 @@ public class CropAndAnswerActivity extends AppCompatActivity {
     }
 
     private void startAnalysis() {
-        String apiKey = getSharedPreferences("settings", MODE_PRIVATE)
-                .getString("api_key", "");
-
         if (apiKey.isEmpty()) {
-            Toast.makeText(this, "请先设置 API Key", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "请先在主页设置 API Key", Toast.LENGTH_SHORT).show();
             return;
         }
 
         confirmButton.setEnabled(false);
         progressBar.setVisibility(View.VISIBLE);
-        answerText.setText("AI 正在分析题目...\n");
+        answerText.setText("AI 正在分析题目...\n\n模型: " + model + "\n");
         answerScroll.setVisibility(View.VISIBLE);
 
-        executor.execute(() -> callOpenAI(apiKey));
+        executor.execute(this::callOpenAI);
     }
 
-    private void callOpenAI(String apiKey) {
+    private void callOpenAI() {
         HttpURLConnection connection = null;
         try {
-            URL url = new URL("https://api.openai.com/v1/chat/completions");
+            String endpoint = baseUrl + "/chat/completions";
+            URL url = new URL(endpoint);
+
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json");
@@ -109,7 +126,7 @@ public class CropAndAnswerActivity extends AppCompatActivity {
 
             // Build request body
             JSONObject requestBody = new JSONObject();
-            requestBody.put("model", "gpt-4o");
+            requestBody.put("model", model);
             requestBody.put("max_tokens", 4096);
 
             JSONArray messages = new JSONArray();
@@ -183,7 +200,7 @@ public class CropAndAnswerActivity extends AppCompatActivity {
             } else {
                 final String errorMsg = response.toString();
                 mainHandler.post(() -> {
-                    answerText.setText("请求失败: " + errorMsg);
+                    answerText.setText("请求失败 (" + responseCode + "):\n\n" + errorMsg);
                     progressBar.setVisibility(View.GONE);
                     confirmButton.setEnabled(true);
                 });
@@ -192,7 +209,7 @@ public class CropAndAnswerActivity extends AppCompatActivity {
         } catch (Exception e) {
             final String errorMsg = e.getMessage();
             mainHandler.post(() -> {
-                answerText.setText("错误: " + errorMsg);
+                answerText.setText("错误: " + errorMsg + "\n\nBase URL: " + baseUrl + "\n模型: " + model);
                 progressBar.setVisibility(View.GONE);
                 confirmButton.setEnabled(true);
             });

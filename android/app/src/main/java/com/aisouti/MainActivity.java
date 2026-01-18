@@ -5,7 +5,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Switch;
@@ -19,8 +18,9 @@ public class MainActivity extends AppCompatActivity {
 
     private Switch floatingSwitch;
     private EditText apiKeyInput;
+    private EditText baseUrlInput;
+    private EditText modelInput;
     private TextView statusText;
-    private boolean isFloatingEnabled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,16 +28,54 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initViews();
+        loadSettings();
         setupListeners();
     }
 
     private void initViews() {
         floatingSwitch = findViewById(R.id.floating_switch);
         apiKeyInput = findViewById(R.id.api_key_input);
+        baseUrlInput = findViewById(R.id.base_url_input);
+        modelInput = findViewById(R.id.model_input);
         statusText = findViewById(R.id.status_text);
 
-        Button settingsButton = findViewById(R.id.settings_button);
-        settingsButton.setOnClickListener(v -> openSettings());
+        Button saveButton = findViewById(R.id.save_button);
+        saveButton.setOnClickListener(v -> saveSettings());
+    }
+
+    private void loadSettings() {
+        android.content.SharedPreferences prefs = getSharedPreferences("settings", MODE_PRIVATE);
+        apiKeyInput.setText(prefs.getString("api_key", ""));
+        baseUrlInput.setText(prefs.getString("base_url", "https://api.openai.com/v1"));
+        modelInput.setText(prefs.getString("model", "gpt-4o"));
+    }
+
+    private void saveSettings() {
+        String apiKey = apiKeyInput.getText().toString().trim();
+        String baseUrl = baseUrlInput.getText().toString().trim();
+        String model = modelInput.getText().toString().trim();
+
+        if (apiKey.isEmpty()) {
+            Toast.makeText(this, "请输入 API Key", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (baseUrl.isEmpty()) {
+            baseUrl = "https://api.openai.com/v1";
+        }
+
+        if (model.isEmpty()) {
+            model = "gpt-4o";
+        }
+
+        getSharedPreferences("settings", MODE_PRIVATE)
+                .edit()
+                .putString("api_key", apiKey)
+                .putString("base_url", baseUrl)
+                .putString("model", model)
+                .apply();
+
+        Toast.makeText(this, "设置已保存", Toast.LENGTH_SHORT).show();
     }
 
     private void setupListeners() {
@@ -53,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     private void enableFloatingWindow() {
         // Check overlay permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "请授予悬浮窗权限", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     Uri.parse("package:" + getPackageName()));
             startActivityForResult(intent, OVERLAY_PERMISSION_REQUEST);
@@ -63,54 +102,53 @@ public class MainActivity extends AppCompatActivity {
         // Check API key
         String apiKey = apiKeyInput.getText().toString().trim();
         if (apiKey.isEmpty()) {
-            Toast.makeText(this, "请先输入 API Key", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "请先输入并保存 API Key", Toast.LENGTH_SHORT).show();
             floatingSwitch.setChecked(false);
             return;
         }
 
-        // Save API key and start service
-        getSharedPreferences("settings", MODE_PRIVATE)
-                .edit()
-                .putString("api_key", apiKey)
-                .apply();
+        // Save settings before starting service
+        saveSettings();
 
-        Intent intent = new Intent(this, FloatingWindowService.class);
-        intent.setAction(FloatingWindowService.ACTION_SHOW);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent);
-        } else {
-            startService(intent);
+        // Start floating window service
+        try {
+            Intent intent = new Intent(this, FloatingWindowService.class);
+            intent.setAction(FloatingWindowService.ACTION_SHOW);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent);
+            } else {
+                startService(intent);
+            }
+
+            statusText.setText("悬浮窗已开启");
+            Toast.makeText(this, "悬浮窗已开启，可以切换到其他应用截图搜题", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "启动悬浮窗失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            floatingSwitch.setChecked(false);
         }
-
-        isFloatingEnabled = true;
-        statusText.setText("悬浮窗已开启");
-        Toast.makeText(this, "悬浮窗已开启，可以切换到其他应用截图搜题", Toast.LENGTH_LONG).show();
     }
 
     private void disableFloatingWindow() {
-        Intent intent = new Intent(this, FloatingWindowService.class);
-        intent.setAction(FloatingWindowService.ACTION_HIDE);
-        startService(intent);
-
-        isFloatingEnabled = false;
-        statusText.setText("悬浮窗已关闭");
-    }
-
-    private void openSettings() {
-        // Open app settings
-        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-        intent.setData(Uri.parse("package:" + getPackageName()));
-        startActivity(intent);
+        try {
+            Intent intent = new Intent(this, FloatingWindowService.class);
+            intent.setAction(FloatingWindowService.ACTION_HIDE);
+            startService(intent);
+            statusText.setText("悬浮窗已关闭");
+        } catch (Exception e) {
+            Toast.makeText(this, "关闭悬浮窗失败: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == OVERLAY_PERMISSION_REQUEST) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
-                floatingSwitch.setChecked(true);
-            } else {
-                Toast.makeText(this, "需要悬浮窗权限", Toast.LENGTH_SHORT).show();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (Settings.canDrawOverlays(this)) {
+                    Toast.makeText(this, "权限已授予，请重新开启悬浮窗", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "需要悬浮窗权限才能使用", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
@@ -118,9 +156,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Load saved API key
-        String savedKey = getSharedPreferences("settings", MODE_PRIVATE)
-                .getString("api_key", "");
-        apiKeyInput.setText(savedKey);
+        // Check if service is running
+        // Update switch state based on service status
     }
 }
