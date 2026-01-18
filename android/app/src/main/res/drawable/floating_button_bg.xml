@@ -5,11 +5,11 @@
     <solid android:color="#6200EE" />
 
     <stroke
-        android:width="2dp"
+        android:width="1dp"
         android:color="#FFFFFF" />
 
     <size
-        android:width="60dp"
-        android:height="60dp" />
+        android:width="48dp"
+        android:height="48dp" />
 
 </shape>
