@@ -5,6 +5,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.Build;
@@ -14,7 +15,6 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -93,10 +93,8 @@ public class FloatingWindowService extends Service {
             return;
         }
 
-        // 创建悬浮窗视图
         floatingView = LayoutInflater.from(this).inflate(R.layout.floating_window, null);
 
-        // 设置窗口参数
         int layoutFlag;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             layoutFlag = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
@@ -116,7 +114,6 @@ public class FloatingWindowService extends Service {
         params.x = 100;
         params.y = 300;
 
-        // 添加触摸监听
         floatingView.setOnTouchListener(new View.OnTouchListener() {
             private long touchStartTime;
 
@@ -148,7 +145,6 @@ public class FloatingWindowService extends Service {
                     case MotionEvent.ACTION_UP:
                         long touchDuration = System.currentTimeMillis() - touchStartTime;
                         if (!isMoving && touchDuration < 300) {
-                            // 点击事件 - 触发截图
                             onFloatingWindowClick();
                         }
                         return true;
@@ -157,7 +153,6 @@ public class FloatingWindowService extends Service {
             }
         });
 
-        // 添加到窗口
         windowManager.addView(floatingView, params);
     }
 
@@ -169,10 +164,7 @@ public class FloatingWindowService extends Service {
     }
 
     private void onFloatingWindowClick() {
-        // 发送点击事件到 React Native
-        FloatingWindowModule.sendEvent("onFloatingWindowClick");
-
-        // 启动截图
+        // Start screen capture activity
         Intent intent = new Intent(this, ScreenCaptureActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);

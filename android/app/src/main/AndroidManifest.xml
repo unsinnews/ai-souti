@@ -1,37 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.aisouti">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- 悬浮窗权限 -->
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
-    <!-- 前台服务权限 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
-
-    <!-- 网络权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- 存储权限 -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name=".MainApplication"
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:allowBackup="false"
+        android:allowBackup="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
 
-        <!-- 主 Activity -->
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|screenSize|smallestScreenSize|uiMode"
-            android:launchMode="singleTask"
-            android:windowSoftInputMode="adjustResize"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,13 +27,19 @@
             </intent-filter>
         </activity>
 
-        <!-- 截图 Activity -->
+        <!-- Screen Capture Activity -->
         <activity
             android:name=".ScreenCaptureActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:exported="false" />
 
-        <!-- 悬浮窗服务 -->
+        <!-- Crop and Answer Activity -->
+        <activity
+            android:name=".CropAndAnswerActivity"
+            android:theme="@style/AppTheme"
+            android:exported="false" />
+
+        <!-- Floating Window Service -->
         <service
             android:name=".FloatingWindowService"
             android:enabled="true"
