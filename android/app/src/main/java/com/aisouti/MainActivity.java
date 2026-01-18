@@ -1,6 +1,7 @@
 package com.aisouti;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
         initViews();
         loadSettings();
         setupListeners();
+        updatePermissionStatus();
     }
 
     private void initViews() {
@@ -48,6 +50,56 @@ public class MainActivity extends AppCompatActivity {
 
         Button saveButton = findViewById(R.id.save_button);
         saveButton.setOnClickListener(v -> saveSettings());
+
+        // Long press status text to show debug info
+        statusText.setOnLongClickListener(v -> {
+            showPermissionDebugDialog();
+            return true;
+        });
+    }
+
+    private void updatePermissionStatus() {
+        boolean hasOverlay = Settings.canDrawOverlays(this);
+        boolean hasNotification = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            hasNotification = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+        }
+
+        StringBuilder status = new StringBuilder();
+        status.append("悬浮窗权限: ").append(hasOverlay ? "✓" : "✗");
+        status.append(" | 通知权限: ").append(hasNotification ? "✓" : "✗");
+        status.append("\n长按此处查看详细权限状态");
+        statusText.setText(status.toString());
+    }
+
+    private void showPermissionDebugDialog() {
+        StringBuilder info = new StringBuilder();
+        info.append("Android 版本: ").append(Build.VERSION.RELEASE);
+        info.append(" (API ").append(Build.VERSION.SDK_INT).append(")\n\n");
+
+        info.append("悬浮窗权限 (SYSTEM_ALERT_WINDOW): ");
+        info.append(Settings.canDrawOverlays(this) ? "已授予 ✓" : "未授予 ✗").append("\n\n");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            info.append("通知权限 (POST_NOTIFICATIONS): ");
+            boolean hasNotif = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+            info.append(hasNotif ? "已授予 ✓" : "未授予 ✗").append("\n\n");
+        }
+
+        info.append("点击「授予悬浮窗权限」按钮手动开启权限");
+
+        new AlertDialog.Builder(this)
+            .setTitle("权限状态调试")
+            .setMessage(info.toString())
+            .setPositiveButton("授予悬浮窗权限", (d, w) -> {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, OVERLAY_PERMISSION_REQUEST);
+            })
+            .setNegativeButton("关闭", null)
+            .show();
     }
 
     private void loadSettings() {
@@ -193,7 +245,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Check if service is running
-        // Update switch state based on service status
+        updatePermissionStatus();
     }
 }
