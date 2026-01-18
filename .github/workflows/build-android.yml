@@ -1,0 +1,102 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install dependencies
+      run: npm ci || npm install
+
+    - name: Create local.properties
+      run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.6'
+
+    - name: Generate Gradle Wrapper
+      working-directory: android
+      run: gradle wrapper --gradle-version 8.6
+
+    - name: Make gradlew executable
+      run: chmod +x android/gradlew
+
+    - name: Build Debug APK
+      working-directory: android
+      run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+    - name: Build Release APK
+      working-directory: android
+      run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-debug
+        path: android/app/build/outputs/apk/debug/app-debug.apk
+        if-no-files-found: error
+
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release
+        path: android/app/build/outputs/apk/release/app-release.apk
+        if-no-files-found: warn
+
+    - name: Create Release
+      if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v1.0.${{ github.run_number }}
+        name: AI搜题助手 v1.0.${{ github.run_number }}
+        body: |
+          ## AI搜题助手
+
+          自动构建版本 v1.0.${{ github.run_number }}
+
+          ### 功能特性
+          - 悬浮窗截图搜题
+          - 支持自由裁剪题目区域
+          - GPT-4 Vision 图片识别
+          - o1/o3-mini 推理模型支持
+          - 流式输出解答过程
+
+          ### 安装说明
+          1. 下载 app-debug.apk
+          2. 在 Android 设备上安装
+          3. 授予悬浮窗和截图权限
+          4. 在设置中配置 OpenAI API Key
+        files: |
+          android/app/build/outputs/apk/debug/app-debug.apk
+          android/app/build/outputs/apk/release/app-release.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

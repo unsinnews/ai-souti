@@ -1,0 +1,59 @@
+# OSX
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# React Native
+.expo/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Android
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/*.iml
+android/.idea/
+*.apk
+*.aab
+
+# iOS
+ios/Pods/
+ios/build/
+*.xcworkspace
+*.xcuserdata
+
+# Bundle artifacts
+*.jsbundle
+*.bundle
+
+# Temporary files
+*.log
+*.tmp
+.temp/
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Metro
+.metro-health-check*
+
+# Gradle
+.gradle/
